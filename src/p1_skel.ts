@@ -642,7 +642,13 @@ class Target extends ScreenObject{
     newGeom(newCentX : number, newCentY : number, newDiam? : number) {
         
         // === YOUR CODE HERE ===
-        
+        if(!(newDiam === undefined)){
+            this.diam = newDiam;
+        }
+        this.x = newCentX;
+        this.y = newCentY;
+        this.visible = true;
+        this.parentUI.configure('in_trial');
         this.declareDamaged();
     }
     
@@ -666,19 +672,24 @@ class Target extends ScreenObject{
     override draw(ctx : CanvasRenderingContext2D) : void {
         
         // === YOUR CODE HERE ===
-        
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
 
     // Pick function.  We only pick within our circle, not the entire bounding box
     override pickedBy(ptX : number, ptY : number) : boolean {
-        
         // === YOUR CODE HERE ===
-        
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
+        const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
+        if(boundary <= this.radius**2){
+            return true;
+        }
         return false;
-        // === END OF CODE TO BE REMOVED ===
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -689,11 +700,12 @@ class Target extends ScreenObject{
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
+        if(this.parentUI.currentState === 'in_trial'){
+            this.parentUI.recordTrialEnd(ptX, ptY, this.diam);
+            this.parentUI.newTrial();
+            return true;
+        }
         return false;
-        // === END OF CODE TO BE REMOVED ===
-
     }
 }
 
@@ -737,7 +749,19 @@ class Reticle extends Target {
     override draw(ctx : CanvasRenderingContext2D) : void {
         
         // === YOUR CODE HERE ===
-
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, Reticle.RETICLE_DIAM/2, 0, 2 * Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
+        ctx.arc(this.x, this.y, Reticle.RETICLE_INNER_DIAM/2, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.moveTo(this.x-this.radius, this.y);
+        ctx.lineTo(this.diam, 0);
+        ctx.moveTo(this.x, this.y-this.radius);
+        ctx.lineTo(0, this.diam);
+        ctx.stroke();
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -746,10 +770,11 @@ class Reticle extends Target {
     override pickedBy(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
+        const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
+        if(boundary <= (Reticle.RETICLE_INNER_DIAM/2)**2){
+            return true;
+        }
         return false;
-        // === END OF CODE TO BE REMOVED ===
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -760,10 +785,12 @@ class Reticle extends Target {
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
+        if(this.parentUI.currentState === 'begin_trial'){
+            this.parentUI.startTrial(ptX, ptY);
+            this.parentUI.configure('in_trial');
+            return true;
+        }
         return false;
-        // === END OF CODE TO BE REMOVED ===
     }
 }
 
