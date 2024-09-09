@@ -509,6 +509,7 @@ class FittsTestUI extends UIClass {
 
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                this.theBackground.draw(this.context);
 
             break;
             case 'begin_trial':
@@ -553,8 +554,14 @@ class FittsTestUI extends UIClass {
             // make new random locations for reticle and target 
             const {retX:retX, retY:retY, targX:targX, targY:targY, targD:targDiam} = 
                 pickLocationsAndSize(this.canvas.width,this.canvas.height);
-
+            
             // === YOUR CODE HERE ===
+            this.theReticle.centerX = retX;
+            this.theReticle.centerY = retY;
+            this.theTarget.x = targX;
+            this.theTarget.y = targY;
+            this.theTarget.diam = targDiam;
+            this.configure('begin_trial');
         }
     }
 
@@ -852,6 +859,9 @@ class BackgroundDisplay extends ScreenObject{
         let xpos : number = 10;
 
         // === YOUR CODE HERE ===
+        ctx.fillText(this.msg1, xpos, ypos);
+        ctx.fillText(this.msg2, xpos, ypos*2);
+        ctx.fillText(this.msg3, xpos, ypos*3);
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -861,10 +871,12 @@ class BackgroundDisplay extends ScreenObject{
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
+        if(this.parentUI.currentState === 'start'){
+            this.parentUI.newTrial();
+            this.parentUI.startTrial(ptX, ptY);
+            return true;
+        }
         return false;
-        // === END OF CODE TO BE REMOVED ===
     }
 }
 
