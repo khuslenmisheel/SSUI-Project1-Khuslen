@@ -509,22 +509,41 @@ class FittsTestUI extends UIClass {
 
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                this.theTarget.visible = false;
                 this.theBackground.draw(this.context);
 
             break;
             case 'begin_trial':
                 
                 // === YOUR CODE HERE ===
+                this.theReticle.visible = true;
+                this.theTarget.visible = false;
+                this.theBackground.visible = true;
+                this.theBackground.msg1 = "Trial #" + this.trialCount + " of " + this.MAX_TRIALS;
+                this.theBackground.msg2 = "";
+                this.theBackground.msg3 = "";
+
         
             break;
             case 'in_trial':
                 
                 // === YOUR CODE HERE ===
+                this.theTarget.visible = true;
+                this.theReticle.visible = false;
+                this.theBackground.visible = false;
+
         
             break;
             case 'ended':
                 
                 // === YOUR CODE HERE ===
+                this.theTarget.visible = false;
+                this.theReticle.visible = false;
+                this.theBackground.visible = true;
+                this.theBackground.msg2 = "Done! Refresh the page to start again.";
+                this.theBackground.msg1 = "";
+                this.theBackground.msg3 = "";
+                this.theBackground.draw(this.context);
         
                 // produce a dump of our data records on the console
                 this.presentData();
@@ -677,14 +696,15 @@ class Target extends ScreenObject{
     
     // Draw the object as a filled and outlined circle
     override draw(ctx : CanvasRenderingContext2D) : void {
-        
         // === YOUR CODE HERE ===
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = 'black';
-        ctx.stroke();
+        if(this.visible){
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+        }
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -692,9 +712,15 @@ class Target extends ScreenObject{
     // Pick function.  We only pick within our circle, not the entire bounding box
     override pickedBy(ptX : number, ptY : number) : boolean {
         // === YOUR CODE HERE ===
-        const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
-        if(boundary <= this.radius**2){
-            return true;
+        if(this.visible){
+            console.log("Mouse?");
+            console.log(ptX, ptY);
+            console.log("Target coords");
+            console.log(this.x, this.y);
+            const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
+            if(boundary <= this.radius**2){
+                return true;
+            }
         }
         return false;
     }
@@ -705,9 +731,8 @@ class Target extends ScreenObject{
     // in which case we respond to this input by ending the current trial
     // and starting a new one.
     override handleClickAt(ptX : number, ptY : number) : boolean {
-        
         // === YOUR CODE HERE ===
-        if(this.parentUI.currentState === 'in_trial'){
+        if(this.pickedBy(ptX, ptY) && this.visible && this.parentUI.currentState === 'in_trial'){
             this.parentUI.recordTrialEnd(ptX, ptY, this.diam);
             this.parentUI.newTrial();
             return true;
@@ -756,30 +781,40 @@ class Reticle extends Target {
     override draw(ctx : CanvasRenderingContext2D) : void {
         
         // === YOUR CODE HERE ===
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, Reticle.RETICLE_DIAM/2, 0, 2 * Math.PI);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.strokeStyle = 'black';
-        ctx.stroke();
-        ctx.arc(this.x, this.y, Reticle.RETICLE_INNER_DIAM/2, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.moveTo(this.x-this.radius, this.y);
-        ctx.lineTo(this.diam, 0);
-        ctx.moveTo(this.x, this.y-this.radius);
-        ctx.lineTo(0, this.diam);
-        ctx.stroke();
+        if(this.visible){
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, Reticle.RETICLE_DIAM/2, 0, 2 * Math.PI);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+    
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, Reticle.RETICLE_INNER_DIAM/2, 0, 2 * Math.PI);
+            ctx.stroke();
+    
+            ctx.beginPath();
+            ctx.moveTo(this.x - Reticle.RETICLE_DIAM/2, this.y);
+            ctx.lineTo(this.x + Reticle.RETICLE_DIAM/2, this.y);
+            ctx.stroke();
+    
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y - Reticle.RETICLE_DIAM/2);
+            ctx.lineTo(this.x, this.y + Reticle.RETICLE_DIAM/2);
+            ctx.stroke();
+        }
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
 
     // Picking function. We are only picked within our small center region.
     override pickedBy(ptX : number, ptY : number) : boolean {
-        
         // === YOUR CODE HERE ===
-        const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
-        if(boundary <= (Reticle.RETICLE_INNER_DIAM/2)**2){
-            return true;
+        if(this.visible){
+            const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
+            if(boundary <= (Reticle.RETICLE_INNER_DIAM/2)**2){
+                return true;
+            }
         }
         return false;
     }
@@ -792,7 +827,7 @@ class Reticle extends Target {
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        if(this.parentUI.currentState === 'begin_trial'){
+        if(this.pickedBy(ptX, ptY) && this.visible && this.parentUI.currentState === 'begin_trial'){
             this.parentUI.startTrial(ptX, ptY);
             this.parentUI.configure('in_trial');
             return true;
@@ -859,9 +894,11 @@ class BackgroundDisplay extends ScreenObject{
         let xpos : number = 10;
 
         // === YOUR CODE HERE ===
+        ctx.beginPath();
         ctx.fillText(this.msg1, xpos, ypos);
         ctx.fillText(this.msg2, xpos, ypos*2);
         ctx.fillText(this.msg3, xpos, ypos*3);
+        ctx.stroke();
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
