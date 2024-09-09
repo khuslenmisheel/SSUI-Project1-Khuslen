@@ -509,13 +509,15 @@ class FittsTestUI extends UIClass {
 
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                //Set target to invisible for now
                 this.theTarget.visible = false;
-                this.theBackground.draw(this.context);
 
             break;
             case 'begin_trial':
                 
                 // === YOUR CODE HERE ===
+                //During trial phase we want the reticles to be visible and the background
+                //to be displaying the trial #
                 this.theReticle.visible = true;
                 this.theTarget.visible = false;
                 this.theBackground.visible = true;
@@ -528,6 +530,7 @@ class FittsTestUI extends UIClass {
             case 'in_trial':
                 
                 // === YOUR CODE HERE ===
+                //Only our Target should be visible during the in_trial phase
                 this.theTarget.visible = true;
                 this.theReticle.visible = false;
                 this.theBackground.visible = false;
@@ -537,6 +540,8 @@ class FittsTestUI extends UIClass {
             case 'ended':
                 
                 // === YOUR CODE HERE ===
+                //When it ends our Reticle and Target should be invisible
+                //Instruct background text to refresh page and dump our data to the log
                 this.theTarget.visible = false;
                 this.theReticle.visible = false;
                 this.theBackground.visible = true;
@@ -544,7 +549,6 @@ class FittsTestUI extends UIClass {
                 this.theBackground.msg1 = "";
                 this.theBackground.msg3 = "";
                 this.theBackground.draw(this.context);
-        
                 // produce a dump of our data records on the console
                 this.presentData();
             break;
@@ -575,11 +579,13 @@ class FittsTestUI extends UIClass {
                 pickLocationsAndSize(this.canvas.width,this.canvas.height);
             
             // === YOUR CODE HERE ===
+            //Set the Reticle and Target to the new randomized locations and new random diameter
             this.theReticle.centerX = retX;
             this.theReticle.centerY = retY;
             this.theTarget.x = targX;
             this.theTarget.y = targY;
             this.theTarget.diam = targDiam;
+            //change our state to beginning a trial
             this.configure('begin_trial');
         }
     }
@@ -668,6 +674,9 @@ class Target extends ScreenObject{
     newGeom(newCentX : number, newCentY : number, newDiam? : number) {
         
         // === YOUR CODE HERE ===
+        //For targets, if the newDiam is defined, want to assign new diameter
+        //and also set our new x and y points for our target
+        //Lastly we are setting our state
         if(!(newDiam === undefined)){
             this.diam = newDiam;
         }
@@ -675,7 +684,6 @@ class Target extends ScreenObject{
         this.y = newCentY;
         this.visible = true;
         this.parentUI.configure('in_trial');
-        this.declareDamaged();
     }
     
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -697,6 +705,8 @@ class Target extends ScreenObject{
     // Draw the object as a filled and outlined circle
     override draw(ctx : CanvasRenderingContext2D) : void {
         // === YOUR CODE HERE ===
+        //In the case we are visible we are drawing a green circle
+        //with a black outline
         if(this.visible){
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
@@ -712,6 +722,8 @@ class Target extends ScreenObject{
     // Pick function.  We only pick within our circle, not the entire bounding box
     override pickedBy(ptX : number, ptY : number) : boolean {
         // === YOUR CODE HERE ===
+        //Checking if the mouse coordinates are inside of the circle
+        //The function is true if the mouse is within the circle
         if(this.visible){
             const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
             if(boundary <= this.radius**2){
@@ -728,6 +740,8 @@ class Target extends ScreenObject{
     // and starting a new one.
     override handleClickAt(ptX : number, ptY : number) : boolean {
         // === YOUR CODE HERE ===
+        //In the case we click on the circle while the it's in trial,
+        //We want to record the trial with it's data and then begin a new trial
         if(this.pickedBy(ptX, ptY) && this.visible && this.parentUI.currentState === 'in_trial'){
             this.parentUI.recordTrialEnd(ptX, ptY, this.diam);
             this.parentUI.newTrial();
@@ -777,23 +791,29 @@ class Reticle extends Target {
     override draw(ctx : CanvasRenderingContext2D) : void {
         
         // === YOUR CODE HERE ===
+        //Want to draw a reticle if our class is visible
         if(this.visible){
+            //Beginning path for each shape
+            //First shape we draw is outer circle with black outline
             ctx.beginPath();
             ctx.arc(this.x, this.y, Reticle.RETICLE_DIAM/2, 0, 2 * Math.PI);
             ctx.fillStyle = this.color;
             ctx.fill();
             ctx.strokeStyle = 'black';
             ctx.stroke();
-    
+            
+            //Second shape we draw is inner circle with black outline
             ctx.beginPath();
             ctx.arc(this.x, this.y, Reticle.RETICLE_INNER_DIAM/2, 0, 2 * Math.PI);
             ctx.stroke();
-    
+            
+            //Drawing diagonal line for cross
             ctx.beginPath();
             ctx.moveTo(this.x - Reticle.RETICLE_DIAM/2, this.y);
             ctx.lineTo(this.x + Reticle.RETICLE_DIAM/2, this.y);
             ctx.stroke();
     
+            //Drawing horizontal line for cross
             ctx.beginPath();
             ctx.moveTo(this.x, this.y - Reticle.RETICLE_DIAM/2);
             ctx.lineTo(this.x, this.y + Reticle.RETICLE_DIAM/2);
@@ -806,6 +826,8 @@ class Reticle extends Target {
     // Picking function. We are only picked within our small center region.
     override pickedBy(ptX : number, ptY : number) : boolean {
         // === YOUR CODE HERE ===
+        //If it is visible we want to check if our mouse click is inside of
+        //the smaller inner circle (NOT THE OUTER)
         if(this.visible){
             const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
             if(boundary <= (Reticle.RETICLE_INNER_DIAM/2)**2){
@@ -823,6 +845,8 @@ class Reticle extends Target {
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
+        //If it's currently beginning trial and we pick our circle
+        //We want to start a new trial and set our state to in_trial
         if(this.pickedBy(ptX, ptY) && this.visible && this.parentUI.currentState === 'begin_trial'){
             this.parentUI.startTrial(ptX, ptY);
             this.parentUI.configure('in_trial');
@@ -890,6 +914,8 @@ class BackgroundDisplay extends ScreenObject{
         let xpos : number = 10;
 
         // === YOUR CODE HERE ===
+        //Want to display each of the messages
+        //For some reason msg1 is a bit off center, but it's the same in the video
         ctx.beginPath();
         ctx.fillText(this.msg1, xpos, ypos);
         ctx.fillText(this.msg2, xpos, ypos*2);
@@ -904,6 +930,8 @@ class BackgroundDisplay extends ScreenObject{
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
+        //If we click anywhere on the screen during start, we should
+        //be starting a new trial
         if(this.parentUI.currentState === 'start'){
             this.parentUI.newTrial();
             this.parentUI.startTrial(ptX, ptY);
