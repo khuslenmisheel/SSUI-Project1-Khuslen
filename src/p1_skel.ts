@@ -713,10 +713,6 @@ class Target extends ScreenObject{
     override pickedBy(ptX : number, ptY : number) : boolean {
         // === YOUR CODE HERE ===
         if(this.visible){
-            console.log("Mouse?");
-            console.log(ptX, ptY);
-            console.log("Target coords");
-            console.log(this.x, this.y);
             const boundary = (ptX - this.x)**2 + (ptY - this.y)**2;
             if(boundary <= this.radius**2){
                 return true;
