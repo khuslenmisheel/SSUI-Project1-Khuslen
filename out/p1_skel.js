@@ -427,7 +427,6 @@ class FittsTestUI extends UIClass {
                 this.theBackground.msg2 = "Done! Refresh the page to start again.";
                 this.theBackground.msg1 = "";
                 this.theBackground.msg3 = "";
-                this.theBackground.draw(this.context);
                 // produce a dump of our data records on the console
                 this.presentData();
                 break;
